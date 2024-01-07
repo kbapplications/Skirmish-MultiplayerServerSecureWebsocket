@@ -20,4 +20,4 @@ RUN dotnet publish "GameServer.ReverseProxy.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GameServer.ReverseProxy.dll", "--urls", "http://*:8080"]
+ENTRYPOINT ["dotnet", "GameServer.ReverseProxy.dll", "--urls", "http://*:8080,https://*.8443"]
