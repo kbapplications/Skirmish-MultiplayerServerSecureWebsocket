@@ -8,8 +8,8 @@ Host.CreateDefaultBuilder(args)
     {
         webBuilder.ConfigureKestrel(serverOptions =>
         {
-            string certPath = Path.Combine(Directory.GetCurrentDirectory(), "server.crt");
-            string keyPath = Path.Combine(Directory.GetCurrentDirectory(), "server.key");
+            string certPath = "/app/server.crt";
+            string keyPath = "/app/server.key";
 
             // Configure Kestrel to use the specified certificate and private key
             serverOptions.ListenAnyIP(8080);  // Adjust the port as needed
