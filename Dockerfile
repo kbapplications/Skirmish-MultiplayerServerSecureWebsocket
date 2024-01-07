@@ -14,6 +14,8 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "GameServer.ReverseProxy.csproj" -c Release -o /app/build
 
+RUN dotnet dev-certs https
+
 FROM build AS publish
 RUN dotnet publish "GameServer.ReverseProxy.csproj" -c Release -o /app/publish
 
