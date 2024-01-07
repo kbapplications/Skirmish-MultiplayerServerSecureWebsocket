@@ -8,26 +8,26 @@ using System.Security.Cryptography.X509Certificates;
 Host.CreateDefaultBuilder(args)
     .ConfigureWebHostDefaults(webBuilder =>
     {
-        webBuilder.ConfigureKestrel(serverOptions =>
-        {
-            // Configure Kestrel to use the specified certificate and private key
-            serverOptions.ListenAnyIP(8080);  // Adjust the port as needed
-            serverOptions.ListenAnyIP(8443, listenOptions =>
-            {
-                string privateKeyPath = "/app/server.crt";
-                string certificatePath = "/app/server.key";
+        //webBuilder.ConfigureKestrel(serverOptions =>
+        //{
+        //    // Configure Kestrel to use the specified certificate and private key
+        //    serverOptions.ListenAnyIP(8080);  // Adjust the port as needed
+        //    serverOptions.ListenAnyIP(8443, listenOptions =>
+        //    {
+        //        string privateKeyPath = "/app/server.crt";
+        //        string certificatePath = "/app/server.key";
 
-                // Load private key
-                RSA privateKey = LoadPrivateKey(privateKeyPath);
+        //        // Load private key
+        //        RSA privateKey = LoadPrivateKey(privateKeyPath);
 
-                // Load certificate
-                X509Certificate2 certificate = new(certificatePath);
+        //        // Load certificate
+        //        X509Certificate2 certificate = new(certificatePath);
 
-                // Create a new X509Certificate2 object combining the private key and certificate
-                X509Certificate2 certificateWithPrivateKey = CreateCertificateWithPrivateKey(certificate, privateKey);
-                listenOptions.UseHttps(certificate);
-            });
-        });
+        //        // Create a new X509Certificate2 object combining the private key and certificate
+        //        X509Certificate2 certificateWithPrivateKey = CreateCertificateWithPrivateKey(certificate, privateKey);
+        //        listenOptions.UseHttps(certificate);
+        //    });
+        //});
         webBuilder.UseStartup<Startup>();
     }).Build().Run();
 
