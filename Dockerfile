@@ -14,11 +14,11 @@ COPY . .
 WORKDIR "/src/."
 RUN dotnet build "GameServer.ReverseProxy.csproj" -c Release -o /app/build
 
-RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /app/server.key -out /app/server.crt -subj "/CN=localhost"
-RUN ls -la /app
-
 FROM build AS publish
 RUN dotnet publish "GameServer.ReverseProxy.csproj" -c Release -o /app/publish
+
+RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /app/server.key -out /app/server.crt -subj "/CN=localhost"
+RUN ls -la /app
 
 FROM base AS final
 WORKDIR /app
