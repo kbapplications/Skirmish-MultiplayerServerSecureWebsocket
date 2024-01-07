@@ -3,8 +3,6 @@
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
 WORKDIR /app
 
-ENV ASPNETCORE_URLS=http://+:8080
-
 EXPOSE 8080
 EXPOSE 443
 
@@ -22,4 +20,4 @@ RUN dotnet publish "GameServer.ReverseProxy.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "GameServer.ReverseProxy.dll"]
+ENTRYPOINT ["dotnet", "GameServer.ReverseProxy.dll", "--urls", "http://*:8080"]
