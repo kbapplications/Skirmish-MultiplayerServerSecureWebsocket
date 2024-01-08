@@ -42,7 +42,9 @@
                 throw new Exception(response.Error.GenerateErrorReport());
             }
 
-            var uriBuilder = new UriBuilder(response.Result.FQDN)
+            var endpoint = string.Concat("ws://", response.Result.IPV4Address);
+            _logger.LogCritical($"end point is ---- {endpoint}");
+            var uriBuilder = new UriBuilder(endpoint)
             {
                 Port = GetEndpointPortNumber(response.Result.Ports)
             };
