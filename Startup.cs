@@ -59,19 +59,6 @@ namespace GameServer.ReverseProxy
                     DeveloperSecretKey = playfabConfig.SecretKey,
                 });
             });
-            services.AddTransient<PlayFabMultiplayerInstanceAPI>(context =>
-            {
-                var authApi = context.GetRequiredService<PlayFabAuthenticationInstanceAPI>();
-
-                // TODO: this should be cached until expiration (1 day)
-                var entityToken = authApi.GetEntityTokenAsync(new GetEntityTokenRequest());
-
-                return new(authApi.apiSettings,
-                        new PlayFabAuthenticationContext()
-                        {
-                            EntityToken = entityToken.Result.Result.EntityToken
-                        });
-            });
             services.AddSingleton<ServerEndpointFactory>();
             services.AddReverseProxy().LoadFromConfig(_configuration.GetSection("ReverseProxy"));
         }

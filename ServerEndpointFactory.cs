@@ -7,22 +7,45 @@
     using System.Threading.Tasks;
     using Microsoft.Extensions.Logging;
     using PlayFab;
+    using PlayFab.AuthenticationModels;
     using PlayFab.MultiplayerModels;
 
     public class ServerEndpointFactory
     {
         private readonly ILogger _logger;
-        private readonly PlayFabMultiplayerInstanceAPI _multiplayerApi;
+        private readonly PlayFabAuthenticationInstanceAPI _authenticationApi;
 
-        public ServerEndpointFactory(ILoggerFactory loggerFactory, PlayFabMultiplayerInstanceAPI multiplayerApi)
+        private (DateTime cachedDate, PlayFabMultiplayerInstanceAPI multiplayerApi) _cachedMultiplayerApi;
+
+        public ServerEndpointFactory(ILoggerFactory loggerFactory, PlayFabAuthenticationInstanceAPI authenticationApi)
         {
             _logger = loggerFactory.CreateLogger<ServerEndpointFactory>();
-            _multiplayerApi = multiplayerApi;
+            _authenticationApi = authenticationApi;
+        }
+
+        public async Task<PlayFabMultiplayerInstanceAPI> GetMultiplayerAPI()
+        {
+            if(_cachedMultiplayerApi == default || 
+                _cachedMultiplayerApi.multiplayerApi == null ||
+                _cachedMultiplayerApi.cachedDate.AddHours(23) < DateTime.UtcNow)
+            {
+                _logger.LogInformation($"Requesting new instance of {nameof(PlayFabMultiplayerInstanceAPI)} - CACHE EXPIRED");
+                var entityToken = await _authenticationApi.GetEntityTokenAsync(new GetEntityTokenRequest());
+
+                PlayFabMultiplayerInstanceAPI api = new(_authenticationApi.apiSettings,
+                        new PlayFabAuthenticationContext()
+                        {
+                            EntityToken = entityToken.Result.EntityToken
+                        });
+                _cachedMultiplayerApi = new(DateTime.UtcNow, api);
+            }
+            return _cachedMultiplayerApi.multiplayerApi;
         }
 
         public async Task<string> GetServerEndpoint(Guid sessionId)
         {
-            var response = await _multiplayerApi.GetMultiplayerServerDetailsAsync(new GetMultiplayerServerDetailsRequest
+            PlayFabMultiplayerInstanceAPI api = await GetMultiplayerAPI();
+            var response = await api.GetMultiplayerServerDetailsAsync(new GetMultiplayerServerDetailsRequest
             {
                 SessionId = sessionId.ToString(),
             });
@@ -36,14 +59,14 @@
 
             if (response.Error != null)
             {
-                _logger.LogError("{Request} failed: {Message}", nameof(_multiplayerApi.GetMultiplayerServerDetailsAsync),
+                _logger.LogError("{Request} failed: {Message}", nameof(api.GetMultiplayerServerDetailsAsync),
                     response.Error.GenerateErrorReport());
 
                 throw new Exception(response.Error.GenerateErrorReport());
             }
 
             var endpoint = string.Concat("ws://", response.Result.IPV4Address);
-            _logger.LogCritical($"end point is ---- {endpoint}");
+            _logger.LogInformation($"end point is ---- {endpoint}");
             var uriBuilder = new UriBuilder(endpoint)
             {
                 Port = GetEndpointPortNumber(response.Result.Ports)
