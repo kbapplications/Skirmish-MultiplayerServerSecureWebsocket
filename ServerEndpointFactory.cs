@@ -15,7 +15,7 @@
         private readonly ILogger _logger;
         private readonly PlayFabAuthenticationInstanceAPI _authenticationApi;
 
-        private (DateTime cachedDate, PlayFabMultiplayerInstanceAPI multiplayerApi) _cachedMultiplayerApi;
+        private (long expiresAt, PlayFabMultiplayerInstanceAPI multiplayerApi) _cachedMultiplayerApi;
 
         public ServerEndpointFactory(ILoggerFactory loggerFactory, PlayFabAuthenticationInstanceAPI authenticationApi)
         {
@@ -25,19 +25,19 @@
 
         public async Task<PlayFabMultiplayerInstanceAPI> GetMultiplayerAPI()
         {
-            if(_cachedMultiplayerApi == default || 
-                _cachedMultiplayerApi.multiplayerApi == null ||
-                _cachedMultiplayerApi.cachedDate.AddHours(23) < DateTime.UtcNow)
+            if(_cachedMultiplayerApi.multiplayerApi == null ||
+                DateTime.UtcNow.ToFileTimeUtc() >= _cachedMultiplayerApi.expiresAt)
             {
                 _logger.LogInformation($"Requesting new instance of {nameof(PlayFabMultiplayerInstanceAPI)} - CACHE EXPIRED");
                 var entityToken = await _authenticationApi.GetEntityTokenAsync(new GetEntityTokenRequest());
 
+                _logger.LogInformation($"Token expires at {entityToken.Result.TokenExpiration}");
                 PlayFabMultiplayerInstanceAPI api = new(_authenticationApi.apiSettings,
                         new PlayFabAuthenticationContext()
                         {
                             EntityToken = entityToken.Result.EntityToken
                         });
-                _cachedMultiplayerApi = new(DateTime.UtcNow, api);
+                _cachedMultiplayerApi = new(entityToken.Result.TokenExpiration.Value.ToFileTimeUtc(), api);
             }
             return _cachedMultiplayerApi.multiplayerApi;
         }
@@ -56,6 +56,8 @@
 
                 return null;
             }
+
+            _logger.LogInformation($"FQDN: {response.Result.FQDN}");
 
             if (response.Error != null)
             {
