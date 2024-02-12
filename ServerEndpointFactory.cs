@@ -29,6 +29,7 @@
                 DateTime.UtcNow.ToFileTimeUtc() >= _cachedMultiplayerApi.expiresAt)
             {
                 _logger.LogInformation($"Requesting new instance of {nameof(PlayFabMultiplayerInstanceAPI)} - CACHE EXPIRED");
+                _authenticationApi.ForgetAllCredentials();
                 var entityToken = await _authenticationApi.GetEntityTokenAsync(new GetEntityTokenRequest());
                 if(entityToken.Error != null)
                 {
