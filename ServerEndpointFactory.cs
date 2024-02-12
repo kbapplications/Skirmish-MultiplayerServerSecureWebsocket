@@ -42,7 +42,7 @@
                         {
                             EntityToken = entityToken.Result.EntityToken
                         });
-                _cachedMultiplayerApi = new(DateTime.UtcNow.AddMinutes(1).ToFileTimeUtc(), api);//new(entityToken.Result.TokenExpiration.Value.ToFileTimeUtc(), api);
+                _cachedMultiplayerApi = new(entityToken.Result.TokenExpiration.Value.ToFileTimeUtc(), api);
                 _logger.LogInformation($"New instance of {nameof(PlayFabMultiplayerAPI)} set, expires at {entityToken.Result.TokenExpiration.Value}");
             }
             return _cachedMultiplayerApi.multiplayerApi;
